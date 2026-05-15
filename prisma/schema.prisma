@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  passwordHash     String
+  role             String
+  name             String
+  phone            String?
+  status           String            @default("ACTIVE")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  customerProfile  CustomerProfile?
+  cleanerProfile   CleanerProfile?
+  customerBookings Booking[]         @relation("CustomerBookings")
+  cleanerBookings  Booking[]         @relation("CleanerBookings")
+  messages         Message[]
+  reportedIncidents IncidentReport[]  @relation("ReportedIncidents")
+  customerReviews  Review[]          @relation("ReviewCustomer")
+  cleanerReviews   Review[]          @relation("ReviewCleaner")
+  adminNotes       AdminNote[]        @relation("AdminNotes")
+  auditLogs        AuditLog[]         @relation("ActorAuditLogs")
+  notifications    Notification[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model CustomerProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultAddress String?
+  city           String?
+  zone           String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CleanerProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                String?
+  city               String             @default("Beograd")
+  zones              CleanerZone[]
+  verificationStatus String             @default("PENDING")
+  ratingAverage      Float              @default(0)
+  ratingCount        Int                @default(0)
+  isActive           Boolean            @default(false)
+  payoutMethodNote   String?
+  internalRiskNote   String?
+  availability       CleanerAvailability[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model CleanerZone {
+  id        String         @id @default(cuid())
+  cleanerId String
+  cleaner   CleanerProfile @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  city      String
+  zone      String
+  isActive  Boolean        @default(true)
+
+  @@unique([cleanerId, city, zone])
+  @@index([city, zone])
+}
+
+model CoverageZone {
+  id        String   @id @default(cuid())
+  city      String
+  zone      String
+  isActive  Boolean  @default(false)
+  isComingSoon Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([city, zone])
+}
+
+model ServiceType {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  name          String
+  description   String?
+  hourlyRateRsd Int
+  minHours      Int
+  isActive      Boolean   @default(true)
+  bookings      Booking[]
+}
+
+model AddOn {
+  id          String         @id @default(cuid())
+  code        String         @unique
+  name        String
+  description String?
+  priceRsd    Int
+  isActive    Boolean        @default(true)
+  bookings    BookingAddOn[]
+}
+
+model Booking {
+  id                   String               @id @default(cuid())
+  bookingCode          String               @unique
+  customerId           String
+  customer             User                 @relation("CustomerBookings", fields: [customerId], references: [id])
+  cleanerId            String?
+  cleaner              User?                @relation("CleanerBookings", fields: [cleanerId], references: [id])
+  serviceTypeId        String
+  serviceType          ServiceType          @relation(fields: [serviceTypeId], references: [id])
+  city                 String
+  zone                 String
+  address              String
+  squareMeters         Int
+  rooms                Int?
+  bathrooms            Int?
+  preferredDate        DateTime
+  preferredStartTime   String
+  estimatedHours       Int
+  customerNotes        String?
+  accessNotes          String?
+  suppliesIncluded     Boolean              @default(false)
+  status               String               @default("REQUESTED")
+  paymentStatus        String               @default("UNPAID")
+  subtotalRsd          Int
+  bookingFeeRsd        Int
+  totalPriceRsd        Int
+  cleanerPayoutRsd     Int
+  platformRevenueRsd   Int
+  recurrencePreference String               @default("ONE_TIME")
+  requiresAdminConfirmation Boolean         @default(false)
+  cancellationReason   String?
+  addOns               BookingAddOn[]
+  messages             Message[]
+  reviews              Review[]
+  incidents            IncidentReport[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([customerId])
+  @@index([cleanerId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([city, zone])
+}
+
+model BookingAddOn {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addOnId   String
+  addOn     AddOn   @relation(fields: [addOnId], references: [id])
+  quantity  Int     @default(1)
+  priceRsd  Int
+
+  @@unique([bookingId, addOnId])
+}
+
+model CleanerAvailability {
+  id        String         @id @default(cuid())
+  cleanerId String
+  cleaner   CleanerProfile @relation(fields: [cleanerId], references: [id], onDelete: Cascade)
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  isActive  Boolean        @default(true)
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User     @relation("ReviewCustomer", fields: [customerId], references: [id])
+  cleanerId  String
+  cleaner    User     @relation("ReviewCleaner", fields: [cleanerId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([bookingId, customerId])
+}
+
+model IncidentReport {
+  id               String           @id @default(cuid())
+  bookingId        String
+  booking          Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reportedByUserId String
+  reportedBy       User             @relation("ReportedIncidents", fields: [reportedByUserId], references: [id])
+  type             String
+  severity         String
+  description      String
+  status           String           @default("OPEN")
+  resolutionNote   String?
+  refundAmountRsd  Int?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status])
+  @@index([severity])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+model AdminNote {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  adminId    String
+  admin      User     @relation("AdminNotes", fields: [adminId], references: [id])
+  note       String
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actor       User?    @relation("ActorAuditLogs", fields: [actorUserId], references: [id])
+  action      String
+  entityType  String
+  entityId    String
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
