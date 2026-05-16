@@ -39,7 +39,7 @@ export default async function AdminCustomersPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="font-black text-ink">{customer.name}</h2>
-                <p className="text-sm text-muted">{customer.email}</p>
+                <p className="text-sm text-muted">{customer.email ?? customer.phone}</p>
                 <p className="mt-1 text-sm text-muted">
                   {customer.customerProfile?.city ?? "nema grada"} - {customer.customerProfile?.zone ?? "nema zone"}
                 </p>

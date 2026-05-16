@@ -41,9 +41,12 @@ type BookingWizardValues = {
   preferredStartTime: string;
   recurrencePreference: "ONE_TIME" | "WEEKLY" | "EVERY_TWO_WEEKS" | "MONTHLY";
   accountMode: "current" | "login" | "register";
+  loginMethod: "email" | "phone";
   loginEmail?: string;
+  loginPhone?: string;
   loginPassword?: string;
-  registerName?: string;
+  registerFirstName?: string;
+  registerLastName?: string;
   registerEmail?: string;
   registerPhone?: string;
   registerPassword?: string;
@@ -81,7 +84,8 @@ export function BookingWizard({
       preferredDate: today,
       preferredStartTime: "10:00",
       recurrencePreference: "ONE_TIME",
-      accountMode: isAuthenticated ? "current" : "register"
+      accountMode: isAuthenticated ? "current" : "register",
+      loginMethod: "email"
     }
   });
 
@@ -133,10 +137,12 @@ export function BookingWizard({
       ["serviceCode"],
       ["preferredDate", "preferredStartTime"],
       [],
-      accountMode === "login"
+      accountMode === "login" && values.loginMethod === "email"
         ? ["loginEmail", "loginPassword"]
+        : accountMode === "login"
+          ? ["loginPhone", "loginPassword"]
         : accountMode === "register"
-          ? ["registerName", "registerEmail", "registerPassword"]
+          ? ["registerFirstName", "registerLastName", "registerEmail", "registerPhone", "registerPassword"]
           : [],
       []
     ];
@@ -355,14 +361,31 @@ export function BookingWizard({
                 </div>
                 {accountMode === "register" ? (
                   <div className="grid gap-3">
-                    <input className="field" placeholder="Ime i prezime" {...form.register("registerName")} />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input className="field" placeholder="Ime" {...form.register("registerFirstName")} />
+                      <input className="field" placeholder="Prezime" {...form.register("registerLastName")} />
+                    </div>
                     <input className="field" type="email" placeholder="Email" {...form.register("registerEmail")} />
                     <input className="field" placeholder="Telefon" {...form.register("registerPhone")} />
                     <input className="field" type="password" placeholder="Lozinka" {...form.register("registerPassword")} />
                   </div>
                 ) : (
                   <div className="grid gap-3">
-                    <input className="field" type="email" placeholder="Email" {...form.register("loginEmail")} />
+                    <div className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-gray-50 p-1">
+                      <label className="button-secondary cursor-pointer">
+                        <input className="sr-only" type="radio" value="email" {...form.register("loginMethod")} />
+                        Email
+                      </label>
+                      <label className="button-secondary cursor-pointer">
+                        <input className="sr-only" type="radio" value="phone" {...form.register("loginMethod")} />
+                        Telefon
+                      </label>
+                    </div>
+                    {values.loginMethod === "phone" ? (
+                      <input className="field" type="tel" placeholder="Telefon" {...form.register("loginPhone")} />
+                    ) : (
+                      <input className="field" type="email" placeholder="Email" {...form.register("loginEmail")} />
+                    )}
                     <input className="field" type="password" placeholder="Lozinka" {...form.register("loginPassword")} />
                   </div>
                 )}

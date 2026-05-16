@@ -35,9 +35,14 @@ export default async function CustomerDashboardPage() {
           <h1 className="text-3xl font-black text-ink">Moj panel</h1>
           <p className="mt-1 text-muted">Rezervacije, poruke, reklamacije i ponovljeni termini.</p>
         </div>
-        <Link href="/book" className="button-primary">
-          Nova rezervacija
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/customer/profile" className="button-secondary">
+            Moj profil
+          </Link>
+          <Link href="/book" className="button-primary">
+            Nova rezervacija
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">

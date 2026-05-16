@@ -15,7 +15,7 @@ export default async function AdminCleanersPage({ searchParams }: { searchParams
   const cleaners = await prisma.cleanerProfile.findMany({
     where,
     include: {
-      user: { select: { name: true, email: true, status: true } },
+      user: { select: { name: true, email: true, phone: true, status: true } },
       zones: true,
       _count: { select: { availability: true } }
     },
@@ -54,7 +54,7 @@ export default async function AdminCleanersPage({ searchParams }: { searchParams
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="font-black text-ink">{profile.user.name}</h2>
-                <p className="text-sm text-muted">{profile.user.email}</p>
+                <p className="text-sm text-muted">{profile.user.email ?? profile.user.phone}</p>
                 <p className="mt-1 text-sm text-muted">Zone: {profile.zones.map((zone) => zone.zone).join(", ") || "nema"}</p>
               </div>
               <div className="grid gap-2 sm:justify-items-end">

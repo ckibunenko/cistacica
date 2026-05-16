@@ -37,6 +37,9 @@ export const cleanerAdminSchema = z.object({
   cleanerProfileId: z.string().min(1),
   verificationStatus: z.enum(["PENDING", "VERIFIED", "REJECTED"]),
   isActive: z.coerce.boolean(),
+  identityVerified: z.coerce.boolean().default(false),
+  phoneVerified: z.coerce.boolean().default(false),
+  backgroundCheckStatus: z.enum(["PENDING", "PASSED", "FAILED"]).default("PENDING"),
   internalRiskNote: z.string().max(2000).optional().or(z.literal("")),
   zones: z.array(z.string()).default([])
 });

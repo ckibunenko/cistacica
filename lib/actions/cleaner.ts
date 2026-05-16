@@ -3,14 +3,17 @@
 import { revalidatePath } from "next/cache";
 import type { BookingStatus } from "@/lib/types";
 import { requireRole } from "@/lib/auth";
+import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/services/audit";
 import { notifyBookingCompleted, notifyBookingConfirmed } from "@/lib/services/notifications";
-import { cleanerBookingDecisionSchema, cleanerProfileSchema } from "@/lib/validators/cleaner";
+import { cleanerBookingDecisionSchema } from "@/lib/validators/cleaner";
+import { cleanerOperationalProfileSchema } from "@/lib/validators/profile";
 
 export async function updateCleanerProfileAction(formData: FormData) {
   const actor = await requireRole("CLEANER");
   const zones = formData.getAll("zones").map(String);
+  const offeredServices = formData.getAll("offeredServices").map(String);
   const availability = [1, 2, 3, 4, 5, 6, 7]
     .map((day) => ({
       dayOfWeek: day,
@@ -19,8 +22,18 @@ export async function updateCleanerProfileAction(formData: FormData) {
     }))
     .filter((slot) => slot.startTime && slot.endTime);
 
-  const parsed = cleanerProfileSchema.safeParse({
+  const parsed = cleanerOperationalProfileSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    phone: normalizePhone(formData.get("phone")),
     bio: formData.get("bio"),
+    yearsExperience: formData.get("yearsExperience") || undefined,
+    offeredServices,
+    bringsSupplies: formData.get("bringsSupplies") === "true",
+    bringsEquipment: formData.get("bringsEquipment") === "true",
+    equipmentNote: formData.get("equipmentNote"),
+    minHours: formData.get("minHours") || 3,
     payoutMethodNote: formData.get("payoutMethodNote"),
     zones,
     availability
@@ -28,17 +41,49 @@ export async function updateCleanerProfileAction(formData: FormData) {
 
   if (!parsed.success) return;
 
+  const [emailOwner, phoneOwner] = await Promise.all([
+    parsed.data.email ? prisma.user.findUnique({ where: { email: parsed.data.email } }) : Promise.resolve(null),
+    prisma.user.findUnique({ where: { phone: parsed.data.phone } })
+  ]);
+  if ((emailOwner && emailOwner.id !== actor.id) || (phoneOwner && phoneOwner.id !== actor.id)) return;
+
+  const name = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
+  await prisma.user.update({
+    where: { id: actor.id },
+    data: {
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+      name,
+      email: parsed.data.email || null,
+      phone: parsed.data.phone
+    }
+  });
+
   const profile = await prisma.cleanerProfile.upsert({
     where: { userId: actor.id },
     create: {
       userId: actor.id,
       bio: parsed.data.bio || null,
+      city: parsed.data.city,
+      yearsExperience: parsed.data.yearsExperience ?? null,
+      offeredServices: parsed.data.offeredServices.join(", "),
+      bringsSupplies: parsed.data.bringsSupplies,
+      bringsEquipment: parsed.data.bringsEquipment,
+      equipmentNote: parsed.data.equipmentNote || null,
+      minHours: parsed.data.minHours,
       payoutMethodNote: parsed.data.payoutMethodNote || null,
       verificationStatus: "PENDING",
       isActive: false
     },
     update: {
       bio: parsed.data.bio || null,
+      city: parsed.data.city,
+      yearsExperience: parsed.data.yearsExperience ?? null,
+      offeredServices: parsed.data.offeredServices.join(", "),
+      bringsSupplies: parsed.data.bringsSupplies,
+      bringsEquipment: parsed.data.bringsEquipment,
+      equipmentNote: parsed.data.equipmentNote || null,
+      minHours: parsed.data.minHours,
       payoutMethodNote: parsed.data.payoutMethodNote || null
     }
   });

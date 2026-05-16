@@ -58,18 +58,28 @@ npm run prisma:seed
 
 - Public landing page in Serbian Latin
 - Booking wizard with active Beograd zones, disabled Novi Sad, disabled deep cleaning, live pricing, login/register step, and recurring preference
-- Customer dashboard with booking details, scoped messages, cancellation, reviews, incidents, and recurrence preference
-- Cleaner dashboard with verification status, editable zones and availability, assigned bookings, job actions, messages, and payout estimate
+- Email or phone + password authentication; no SMS/OTP integration in MVP
+- Tabbed registration for `Korisnik` and `Pružalac usluge`, with separate first/last name and required phone
+- Customer dashboard with booking details, profile editing, scoped messages, cancellation, reviews, incidents, and recurrence preference
+- Cleaner dashboard with verification status, detailed profile editing, zones, services, availability, assigned bookings, job actions, messages, and payout estimate
 - Admin dashboard with KPIs, booking management, cleaner management, customer management, incident management, manual payment state, admin notes, and audit trail
 - Seed data for admins, customers, cleaners, bookings, reviews, incidents, notes, notifications, service types, add-ons, and coverage zones
 - Pricing, payment abstraction, notification service, audit service, booking status helper, and access-control helper
+
+## Profile And Visibility Rules
+
+- Admin sees full customer and cleaner operational profiles.
+- Customers do not see cleaner phone numbers or emails.
+- Cleaners do not see customer phone numbers or emails.
+- Cleaners see exact addresses only for assigned/confirmed jobs.
+- The MVP is for independent verified service providers, not cleaning companies or agencies.
 
 ## MVP Limitations
 
 - Payments are manual only; no real payment gateway is integrated.
 - Messaging is refresh-based and booking-scoped only.
 - Recurring bookings store preference only; automatic recurring billing/scheduling is not implemented.
-- No SMS, email, file upload, routing, AI matching, or payout integration.
+- No SMS OTP, email provider, file upload, routing, AI matching, or payout integration.
 - Cleaner phone numbers are not exposed to customers.
 - Cleaner profiles are not public marketplace listings.
 

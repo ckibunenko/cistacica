@@ -9,7 +9,9 @@ export default async function RegisterPage() {
     <main className="container-page grid min-h-[calc(100vh-64px)] place-items-center py-10">
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-black text-ink">Registracija</h1>
-        <p className="mt-2 text-muted">Korisnici mogu odmah zakazivati. Pružaoci usluge čekaju admin proveru.</p>
+        <p className="mt-2 text-muted">
+          Korisnici mogu odmah postaviti zahtev. Pružaoci usluge mogu koristiti telefon + lozinku, a admin proverava profil pre aktivacije.
+        </p>
         <div className="mt-6">
           <AuthForm mode="register" />
         </div>

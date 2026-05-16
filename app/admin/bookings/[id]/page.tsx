@@ -82,7 +82,7 @@ export default async function AdminBookingDetailPage({ params }: { params: { id:
             <h2 className="text-xl font-black text-ink">Detalji rezervacije</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               <Info label="Adresa" value={booking.address} />
-              <Info label="Korisnik" value={`${booking.customer.name} (${booking.customer.email})`} />
+              <Info label="Korisnik" value={`${booking.customer.name} (${booking.customer.email ?? "bez emaila"})`} />
               <Info label="Telefon korisnika" value={booking.customer.phone ?? "Nije unet"} />
               <Info label="Pružalac" value={booking.cleaner?.name ?? "Nije dodeljen"} />
               <Info label="Kvadratura" value={`${booking.squareMeters} m2`} />

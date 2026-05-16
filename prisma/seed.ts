@@ -21,6 +21,14 @@ function code(index: number) {
   return `CD-DEMO-${String(index).padStart(3, "0")}`;
 }
 
+function nameParts(name: string) {
+  const [firstName, ...rest] = name.split(" ");
+  return {
+    firstName: firstName || name,
+    lastName: rest.join(" ") || "Demo"
+  };
+}
+
 async function main() {
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -124,6 +132,8 @@ async function main() {
       email: "admin@cistodom.local",
       passwordHash,
       role: "ADMIN",
+      firstName: "CistoDom",
+      lastName: "Operacije",
       name: "CistoDom Operacije",
       phone: "+381600000001",
       status: "ACTIVE"
@@ -135,25 +145,37 @@ async function main() {
       ["milica@demo.local", "Milica Jovanović", "Bulevar kralja Aleksandra 52", "Vračar"],
       ["marko@demo.local", "Marko Petrović", "Kralja Petra 18", "Stari grad"],
       ["ana@demo.local", "Ana Nikolić", "Jurija Gagarina 144", "Novi Beograd"]
-    ].map(([email, name, address, zone]) =>
-      prisma.user.create({
-        data: {
-          email,
-          name,
-          phone: "+38160111222",
-          passwordHash: customerHash,
-          role: "CUSTOMER",
-          status: "ACTIVE",
-          customerProfile: {
-            create: {
-              defaultAddress: address,
-              city: "Beograd",
-              zone,
-              notes: "Demo korisnik"
+    ].map(([email, name, address, zone], index) => {
+      const parts = nameParts(name);
+      return prisma.user.create({
+          data: {
+            email,
+            ...parts,
+            name,
+            phone: `+3816011122${index}`,
+            passwordHash: customerHash,
+            role: "CUSTOMER",
+            status: "ACTIVE",
+            customerProfile: {
+              create: {
+                defaultAddress: address,
+                city: "Beograd",
+                zone,
+                floor: index === 2 ? "8" : "2",
+                apartment: index === 1 ? "12" : "5",
+                intercom: index === 0 ? "Jovanovic" : "Pozvoniti",
+                propertyType: "Stan",
+                hasPets: index === 0,
+                petNotes: index === 0 ? "Mali pas, nije agresivan." : null,
+                preferredTimeWindows: index === 1 ? "Radnim danima posle 16h" : "Jutarnji termini",
+                preferredFrequency: index === 2 ? "WEEKLY" : "EVERY_TWO_WEEKS",
+                accessNotes: "Javiti se porukom pre dolaska.",
+                notes: "Demo korisnik sa popunjenim operativnim profilom."
+              }
             }
           }
-        }
-      })
+        });
+      }
     )
   );
 
@@ -169,12 +191,14 @@ async function main() {
   ] as const;
 
   const cleaners = await Promise.all(
-    cleanerSeed.map(([email, name, verificationStatus, isActive, zones]) =>
-      prisma.user.create({
+    cleanerSeed.map(([email, name, verificationStatus, isActive, zones], index) => {
+      const parts = nameParts(name);
+      return prisma.user.create({
         data: {
           email,
+          ...parts,
           name,
-          phone: "+38160222333",
+          phone: `+3816022233${index}`,
           passwordHash: cleanerHash,
           role: "CLEANER",
           status: verificationStatus === "REJECTED" ? "SUSPENDED" : "ACTIVE",
@@ -182,7 +206,19 @@ async function main() {
             create: {
               bio: "Pouzdano, detaljno i diskretno održavanje stanova.",
               city: "Beograd",
+              yearsExperience: index + 1,
+              offeredServices:
+                index % 2 === 0
+                  ? "Redovno čišćenje, Standardno čišćenje, Pranje prozora"
+                  : "Redovno čišćenje, Peglanje, Dubinsko čišćenje nameštaja",
+              bringsSupplies: index % 2 === 0,
+              bringsEquipment: index % 3 === 0,
+              equipmentNote: index % 2 === 0 ? "Donosi osnovna sredstva i krpe." : "Radi sa sredstvima korisnika.",
+              minHours: index % 3 === 0 ? 4 : 3,
               verificationStatus,
+              identityVerified: verificationStatus === "VERIFIED",
+              phoneVerified: verificationStatus !== "REJECTED",
+              backgroundCheckStatus: verificationStatus === "VERIFIED" ? "PASSED" : "PENDING",
               isActive,
               payoutMethodNote: "Isplata jednom nedeljno.",
               internalRiskNote: verificationStatus === "REJECTED" ? "Nepotpuna dokumentacija u demo podacima." : null,
@@ -204,7 +240,8 @@ async function main() {
             }
           }
         }
-      })
+      });
+    }
     )
   );
 

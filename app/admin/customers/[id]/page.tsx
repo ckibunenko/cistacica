@@ -16,6 +16,8 @@ export default async function AdminCustomerDetailPage({ params }: { params: { id
       where: { id: params.id, role: "CUSTOMER" },
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         name: true,
         email: true,
         phone: true,
@@ -43,7 +45,7 @@ export default async function AdminCustomerDetailPage({ params }: { params: { id
         <div>
           <h1 className="text-3xl font-black text-ink">{customer.name}</h1>
           <p className="mt-1 text-muted">
-            {customer.email} - {customer.phone ?? "bez telefona"}
+            {customer.email ?? "bez emaila"} - {customer.phone ?? "bez telefona"}
           </p>
         </div>
         <StatusBadge value={customer.status} />
@@ -81,9 +83,23 @@ export default async function AdminCustomerDetailPage({ params }: { params: { id
           <div className="panel p-5">
             <h2 className="text-xl font-black text-ink">Profil</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+              <Info label="Ime" value={customer.firstName || "nema"} />
+              <Info label="Prezime" value={customer.lastName || "nema"} />
+              <Info label="Email" value={customer.email ?? "nema"} />
+              <Info label="Telefon" value={customer.phone ?? "nema"} />
               <Info label="Adresa" value={customer.customerProfile?.defaultAddress ?? "nema"} />
               <Info label="Grad" value={customer.customerProfile?.city ?? "nema"} />
               <Info label="Zona" value={customer.customerProfile?.zone ?? "nema"} />
+              <Info label="Sprat" value={customer.customerProfile?.floor ?? "nema"} />
+              <Info label="Stan" value={customer.customerProfile?.apartment ?? "nema"} />
+              <Info label="Interfon" value={customer.customerProfile?.intercom ?? "nema"} />
+              <Info label="Tip prostora" value={customer.customerProfile?.propertyType ?? "nema"} />
+              <Info label="Ljubimci" value={customer.customerProfile?.hasPets ? "Da" : "Ne"} />
+              <Info label="Napomena o ljubimcima" value={customer.customerProfile?.petNotes ?? "nema"} />
+              <Info label="Preferirani termini" value={customer.customerProfile?.preferredTimeWindows ?? "nema"} />
+              <Info label="Učestalost" value={customer.customerProfile?.preferredFrequency ?? "nema"} />
+              <Info label="Pristup" value={customer.customerProfile?.accessNotes ?? "nema"} />
+              <Info label="Napomene" value={customer.customerProfile?.notes ?? "nema"} />
               <Info label="Kreiran" value={formatDate(customer.createdAt)} />
             </dl>
           </div>

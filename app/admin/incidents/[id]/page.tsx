@@ -55,8 +55,8 @@ export default async function AdminIncidentDetailPage({ params }: { params: { id
           <div className="panel p-5">
             <h2 className="text-xl font-black text-ink">Rezervacija</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Info label="Korisnik" value={`${incident.booking.customer.name} (${incident.booking.customer.email})`} />
-              <Info label="Pružalac" value={incident.booking.cleaner ? `${incident.booking.cleaner.name} (${incident.booking.cleaner.email})` : "Nije dodeljen"} />
+              <Info label="Korisnik" value={`${incident.booking.customer.name} (${incident.booking.customer.email ?? "bez emaila"})`} />
+              <Info label="Pružalac" value={incident.booking.cleaner ? `${incident.booking.cleaner.name} (${incident.booking.cleaner.email ?? "bez emaila"})` : "Nije dodeljen"} />
               <Info label="Status" value={incident.booking.status} />
               <Info label="Plaćanje" value={incident.booking.paymentStatus} />
               <Info label="Ukupno" value={formatRsd(incident.booking.totalPriceRsd)} />

@@ -25,6 +25,16 @@ export function canMessageInBooking(actor: Actor, booking: BookingAccess) {
   return canAccessBooking(actor, booking);
 }
 
+export function canUpdateOwnProfile(actor: Actor, profileUserId: string, role: Role) {
+  return actor.status === "ACTIVE" && actor.id === profileUserId && actor.role === role;
+}
+
+export function canViewPrivateContact(actor: Actor, target: Pick<Actor, "id" | "role">) {
+  if (actor.status !== "ACTIVE") return false;
+  if (actor.role === "ADMIN") return true;
+  return actor.id === target.id;
+}
+
 export function canCleanerSeeAddress(actor: Actor, booking: BookingAccess & { status?: string }) {
   if (actor.role !== "CLEANER") return false;
   if (booking.cleanerId !== actor.id) return false;

@@ -4,23 +4,23 @@ import { ACTIVE_BELGRADE_ZONES, BELGRADE_ZONES, BRAND_NAME } from "@/lib/constan
 import { formatRsd } from "@/lib/format";
 
 const trust = [
-  ["Proverene osobe", "Verifikacija, interne beleške i admin kontrola dodele."],
-  ["Jasna cena", "Cena je vidljiva pre slanja zahteva, bez direktnog dogovaranja sa strane."],
-  ["Podrška i reklamacije", "Incidenti se vode kroz platformu, sa statusom i beleškama."],
-  ["Redovni termini", "Nedeljno, na dve nedelje ili mesečno za ručno planiranje."]
+  ["Provereni pružaoci", "Radimo sa samostalnim osobama, ne sa javnom listom firmi i oglasa."],
+  ["Zahtev umesto cimanja", "Uneseš lokaciju, tip usluge, učestalost i termin; platforma vodi tok."],
+  ["Ponude bez javne liste", "Korisnik ne lista sve čistače, već vidi relevantne odgovore za svoj zahtev."],
+  ["Podrška i ocene", "Poruke, reklamacije i ocene ostaju u okviru platforme."]
 ];
 
 const steps = [
-  "Uneseš adresu i veličinu stana",
-  "Izabereš termin i tip čišćenja",
-  "Platforma dodeljuje proverenu osobu",
-  "Oceniš uslugu nakon završetka"
+  "Postaviš šta ti treba: lokacija, prostor, usluga i učestalost",
+  "Verifikovani pružaoci šalju relevantne odgovore ili ponude",
+  "Prihvataš dogovor koji ti najviše odgovara",
+  "Posle završetka obe strane ostavljaju ocenu"
 ];
 
 const opsCards: Array<[string, string, LucideIcon]> = [
-  ["Status", "Dodela u toku", ClipboardCheck],
-  ["Plaćanje", "Ručna provera", CreditCard],
-  ["Poverenje", "Verifikovana osoba", ShieldCheck],
+  ["Model", "Zahtev i relevantne ponude", ClipboardCheck],
+  ["Plaćanje", "Usluga se plaća direktno", CreditCard],
+  ["Poverenje", "Verifikovani samostalni pružaoci", ShieldCheck],
   ["Podrška", "Reklamacije kroz platformu", HeartHandshake]
 ];
 
@@ -36,12 +36,12 @@ export default function HomePage() {
             Provereno čišćenje doma, bez cimanja
           </h1>
           <p className="mt-5 text-lg leading-8 text-muted">
-            {BRAND_NAME} povezuje korisnike sa verifikovanim pružaocima usluge u odabranim beogradskim zonama.
-            Platforma vodi rezervaciju, dodelu, status plaćanja, reklamacije i ocene.
+            {BRAND_NAME} je request-based marketplace za čišćenje. Postaviš zahtev, dobijaš relevantne odgovore od
+            proverenih samostalnih pružalaca usluge i biraš dogovor bez javnog listanja profila i razmene telefona.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/book" className="button-primary">
-              Zakaži čišćenje
+              Postavi zahtev
             </Link>
             <Link href="/register" className="button-secondary">
               Prijavi se kao pružalac usluge
@@ -51,16 +51,16 @@ export default function HomePage() {
 
         <div className="panel overflow-hidden">
           <div className="border-b border-line bg-leaf p-5">
-            <p className="text-sm font-semibold text-brand">Operativni pregled</p>
-            <p className="mt-1 text-2xl font-black text-ink">Managed marketplace, ne oglasnik</p>
+            <p className="text-sm font-semibold text-brand">Operativni model</p>
+            <p className="mt-1 text-2xl font-black text-ink">Upwork princip za čišćenje</p>
           </div>
           <div className="grid gap-3 p-5">
             {opsCards.map(([label, value, Icon]) => (
-              <div key={String(label)} className="flex items-center gap-3 rounded-md border border-line bg-white p-3">
+              <div key={label} className="flex items-center gap-3 rounded-md border border-line bg-white p-3">
                 <Icon className="h-5 w-5 text-brand" />
                 <div>
-                  <p className="text-xs uppercase text-muted">{String(label)}</p>
-                  <p className="font-semibold text-ink">{String(value)}</p>
+                  <p className="text-xs uppercase text-muted">{label}</p>
+                  <p className="font-semibold text-ink">{value}</p>
                 </div>
               </div>
             ))}
@@ -95,12 +95,12 @@ export default function HomePage() {
           </div>
         </div>
         <div>
-          <h2 className="text-2xl font-black text-ink">Cena za MVP pilot</h2>
+          <h2 className="text-2xl font-black text-ink">Usluge za pilot</h2>
           <div className="mt-5 grid gap-3">
             {[
               ["Redovno čišćenje", "od 3h", 1100],
               ["Standardno čišćenje", "od 3h", 1300],
-              ["Dubinsko čišćenje", "uskoro", 1600]
+              ["Dubinsko čišćenje i posebni zahtevi", "uskoro", 1600]
             ].map(([name, note, rate]) => (
               <div key={String(name)} className="flex items-center justify-between rounded-lg border border-line bg-white p-4">
                 <div>
@@ -111,7 +111,7 @@ export default function HomePage() {
               </div>
             ))}
             <p className="text-sm leading-6 text-muted">
-              Naknada za rezervaciju je 190 RSD. Posebno zaprljanje ili zahtevi preko 120 m2 mogu tražiti admin potvrdu.
+              U MVP-u se usluga ne naplaćuje preko platforme. Platforma priprema model fee-ja za prihvaćenu ponudu.
             </p>
           </div>
         </div>
@@ -138,9 +138,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="rounded-lg border border-line bg-leaf p-6">
-            <h2 className="text-2xl font-black text-ink">Radiš kvalitetno i pouzdano?</h2>
+            <h2 className="text-2xl font-black text-ink">Radiš samostalno i pouzdano?</h2>
             <p className="mt-3 leading-7 text-muted">
-              Prijavi se za proveru. U MVP-u admin ručno verifikuje profile, zone i raspoloživost pre dodele poslova.
+              Prijavi se za proveru. MVP je namenjen samostalnim pružaocima usluge čišćenja, bez firmi i agencija.
             </p>
             <Link href="/register" className="button-primary mt-5">
               Prijavi se kao pružalac usluge

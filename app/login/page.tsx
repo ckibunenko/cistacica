@@ -16,7 +16,7 @@ export default async function LoginPage({
         <p className="mt-2 text-muted">
           {searchParams.registered === "cleaner"
             ? "Prijava pružaoca usluge je primljena. Admin mora aktivirati nalog pre prijave."
-            : "Uđite u svoj panel prema ulozi naloga."}
+            : "Uđite preko emaila ili telefona, u zavisnosti od toga kako je nalog napravljen."}
         </p>
         <div className="mt-6">
           <AuthForm mode="login" />

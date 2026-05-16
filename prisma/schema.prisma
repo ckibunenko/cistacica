@@ -9,11 +9,13 @@ datasource db {
 
 model User {
   id               String            @id @default(cuid())
-  email            String            @unique
+  email            String?           @unique
   passwordHash     String
   role             String
+  firstName        String            @default("")
+  lastName         String            @default("")
   name             String
-  phone            String?
+  phone            String            @unique
   status           String            @default("ACTIVE")
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -31,6 +33,7 @@ model User {
 
   @@index([role])
   @@index([status])
+  @@index([phone])
 }
 
 model CustomerProfile {
@@ -40,6 +43,15 @@ model CustomerProfile {
   defaultAddress String?
   city           String?
   zone           String?
+  floor          String?
+  apartment      String?
+  intercom       String?
+  propertyType   String?
+  hasPets        Boolean  @default(false)
+  petNotes       String?
+  preferredTimeWindows String?
+  preferredFrequency String @default("ONE_TIME")
+  accessNotes    String?
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -52,7 +64,16 @@ model CleanerProfile {
   bio                String?
   city               String             @default("Beograd")
   zones              CleanerZone[]
+  yearsExperience    Int?
+  offeredServices    String?
+  bringsSupplies     Boolean            @default(false)
+  bringsEquipment    Boolean            @default(false)
+  equipmentNote      String?
+  minHours           Int                @default(3)
   verificationStatus String             @default("PENDING")
+  identityVerified   Boolean            @default(false)
+  phoneVerified      Boolean            @default(false)
+  backgroundCheckStatus String          @default("PENDING")
   ratingAverage      Float              @default(0)
   ratingCount        Int                @default(0)
   isActive           Boolean            @default(false)

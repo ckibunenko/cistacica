@@ -2,6 +2,12 @@ import { z } from "zod";
 
 export const cleanerProfileSchema = z.object({
   bio: z.string().max(1200).optional().or(z.literal("")),
+  yearsExperience: z.coerce.number().int().min(0).max(60).optional(),
+  offeredServices: z.array(z.string()).default([]),
+  bringsSupplies: z.coerce.boolean().default(false),
+  bringsEquipment: z.coerce.boolean().default(false),
+  equipmentNote: z.string().max(700).optional().or(z.literal("")),
+  minHours: z.coerce.number().int().min(1).max(12).default(3),
   payoutMethodNote: z.string().max(600).optional().or(z.literal("")),
   zones: z.array(z.string()).default([]),
   availability: z

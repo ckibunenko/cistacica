@@ -160,6 +160,9 @@ export async function updateCleanerAdminAction(formData: FormData) {
     cleanerProfileId: formData.get("cleanerProfileId"),
     verificationStatus: formData.get("verificationStatus"),
     isActive: formData.get("isActive") === "true",
+    identityVerified: formData.get("identityVerified") === "true",
+    phoneVerified: formData.get("phoneVerified") === "true",
+    backgroundCheckStatus: formData.get("backgroundCheckStatus") || "PENDING",
     internalRiskNote: formData.get("internalRiskNote"),
     zones: formData.getAll("zones").map(String).filter((zone) => ACTIVE_BELGRADE_ZONES.includes(zone))
   });
@@ -170,6 +173,9 @@ export async function updateCleanerAdminAction(formData: FormData) {
     data: {
       verificationStatus: parsed.data.verificationStatus,
       isActive: parsed.data.isActive,
+      identityVerified: parsed.data.identityVerified,
+      phoneVerified: parsed.data.phoneVerified,
+      backgroundCheckStatus: parsed.data.backgroundCheckStatus,
       internalRiskNote: parsed.data.internalRiskNote || null,
       user: {
         update: {
@@ -193,7 +199,13 @@ export async function updateCleanerAdminAction(formData: FormData) {
     action: parsed.data.verificationStatus === "VERIFIED" ? "CLEANER_VERIFIED" : "CLEANER_REVIEW_UPDATED",
     entityType: "CleanerProfile",
     entityId: profile.id,
-    metadata: { verificationStatus: parsed.data.verificationStatus, isActive: parsed.data.isActive }
+    metadata: {
+      verificationStatus: parsed.data.verificationStatus,
+      isActive: parsed.data.isActive,
+      identityVerified: parsed.data.identityVerified,
+      phoneVerified: parsed.data.phoneVerified,
+      backgroundCheckStatus: parsed.data.backgroundCheckStatus
+    }
   });
   revalidatePath("/admin/cleaners");
   revalidatePath(`/admin/cleaners/${profile.id}`);

@@ -2,16 +2,19 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
-import { auditLog } from "@/lib/services/audit";
 import { createSession, destroySession } from "@/lib/auth";
-import { dashboardPathForRole } from "@/lib/services/access-control";
 import { prisma } from "@/lib/prisma";
-import { loginSchema, registerSchema } from "@/lib/validators/auth";
+import { normalizePhone } from "@/lib/phone";
+import { dashboardPathForRole } from "@/lib/services/access-control";
+import { auditLog } from "@/lib/services/audit";
 import type { Role } from "@/lib/types";
+import { loginSchema, registerSchema } from "@/lib/validators/auth";
 
 export async function loginAction(_: unknown, formData: FormData) {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    loginMethod: formData.get("loginMethod") || "email",
+    email: formData.get("email") ?? "",
+    phone: normalizePhone(formData.get("phone")),
     password: formData.get("password")
   });
 
@@ -19,17 +22,18 @@ export async function loginAction(_: unknown, formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Neispravni podaci." };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email }
-  });
+  const user =
+    parsed.data.loginMethod === "phone"
+      ? await prisma.user.findUnique({ where: { phone: normalizePhone(parsed.data.phone) } })
+      : await prisma.user.findUnique({ where: { email: parsed.data.email || "" } });
 
   if (!user || user.status !== "ACTIVE") {
-    return { error: "Neispravan email ili lozinka." };
+    return { error: "Neispravan identifikator ili lozinka." };
   }
 
   const passwordMatches = await bcrypt.compare(parsed.data.password, user.passwordHash);
   if (!passwordMatches) {
-    return { error: "Neispravan email ili lozinka." };
+    return { error: "Neispravan identifikator ili lozinka." };
   }
 
   await createSession(user.id);
@@ -37,10 +41,12 @@ export async function loginAction(_: unknown, formData: FormData) {
 }
 
 export async function registerAction(_: unknown, formData: FormData) {
+  const phone = normalizePhone(formData.get("phone"));
   const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email") ?? "",
+    phone,
     password: formData.get("password"),
     role: formData.get("role") || "CUSTOMER"
   });
@@ -49,24 +55,36 @@ export async function registerAction(_: unknown, formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Neispravni podaci." };
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-  if (existing) {
-    return { error: "Nalog sa tim emailom već postoji." };
+  if (parsed.data.email) {
+    const existingEmail = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+    if (existingEmail) {
+      return { error: "Nalog sa tim emailom već postoji." };
+    }
+  }
+
+  const existingPhone = await prisma.user.findUnique({ where: { phone: parsed.data.phone } });
+  if (existingPhone) {
+    return { error: "Nalog sa tim telefonom već postoji." };
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+  const name = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
   const user = await prisma.user.create({
     data: {
-      email: parsed.data.email,
+      email: parsed.data.email ?? null,
       passwordHash,
-      name: parsed.data.name,
-      phone: parsed.data.phone || null,
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+      name,
+      phone: parsed.data.phone,
       role: parsed.data.role,
       status: parsed.data.role === "CLEANER" ? "PENDING" : "ACTIVE",
       customerProfile:
         parsed.data.role === "CUSTOMER"
           ? {
-              create: {}
+              create: {
+                preferredFrequency: "ONE_TIME"
+              }
             }
           : undefined,
       cleanerProfile:
@@ -74,7 +92,9 @@ export async function registerAction(_: unknown, formData: FormData) {
           ? {
               create: {
                 verificationStatus: "PENDING",
-                isActive: false
+                isActive: false,
+                minHours: 3,
+                backgroundCheckStatus: "PENDING"
               }
             }
           : undefined
@@ -86,7 +106,7 @@ export async function registerAction(_: unknown, formData: FormData) {
     action: "USER_CREATED",
     entityType: "User",
     entityId: user.id,
-    metadata: { role: user.role }
+    metadata: { role: user.role, registration: parsed.data.email ? "email" : "phone" }
   });
 
   if (user.status === "ACTIVE") {

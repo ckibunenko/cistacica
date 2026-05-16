@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccessBooking } from "@/lib/services/access-control";
+import { canAccessBooking, canUpdateOwnProfile, canViewPrivateContact } from "@/lib/services/access-control";
 
 const active = { status: "ACTIVE" as const };
 
@@ -33,5 +33,21 @@ describe("access control helper", () => {
     expect(
       canAccessBooking({ id: "admin-1", role: "ADMIN", ...active }, { customerId: "customer-1", cleanerId: "cleaner-2" })
     ).toBe(true);
+  });
+
+  it("allows users to update only their own profile for their role", () => {
+    expect(canUpdateOwnProfile({ id: "customer-1", role: "CUSTOMER", ...active }, "customer-1", "CUSTOMER")).toBe(true);
+    expect(canUpdateOwnProfile({ id: "customer-1", role: "CUSTOMER", ...active }, "customer-2", "CUSTOMER")).toBe(false);
+    expect(canUpdateOwnProfile({ id: "cleaner-1", role: "CLEANER", ...active }, "cleaner-1", "CLEANER")).toBe(true);
+  });
+
+  it("keeps customer and cleaner private contacts hidden from each other", () => {
+    expect(
+      canViewPrivateContact({ id: "customer-1", role: "CUSTOMER", ...active }, { id: "cleaner-1", role: "CLEANER" })
+    ).toBe(false);
+    expect(
+      canViewPrivateContact({ id: "cleaner-1", role: "CLEANER", ...active }, { id: "customer-1", role: "CUSTOMER" })
+    ).toBe(false);
+    expect(canViewPrivateContact({ id: "admin-1", role: "ADMIN", ...active }, { id: "customer-1", role: "CUSTOMER" })).toBe(true);
   });
 });

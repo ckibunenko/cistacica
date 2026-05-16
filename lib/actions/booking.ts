@@ -5,6 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, requireUser, createSession } from "@/lib/auth";
+import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/services/audit";
 import { canAccessBooking, canMessageInBooking } from "@/lib/services/access-control";
@@ -38,7 +39,10 @@ async function getOrCreateBookingUser(data: BookingWizardInput) {
   }
 
   if (data.accountMode === "login") {
-    const user = await prisma.user.findUnique({ where: { email: data.loginEmail || "" } });
+    const user =
+      data.loginMethod === "phone"
+        ? await prisma.user.findUnique({ where: { phone: normalizePhone(data.loginPhone) } })
+        : await prisma.user.findUnique({ where: { email: data.loginEmail || "" } });
     if (!user || user.status !== "ACTIVE" || user.role !== "CUSTOMER") {
       throw new Error("Neispravni podaci za prijavu.");
     }
@@ -51,12 +55,19 @@ async function getOrCreateBookingUser(data: BookingWizardInput) {
   if (data.accountMode === "register") {
     const existing = await prisma.user.findUnique({ where: { email: data.registerEmail || "" } });
     if (existing) throw new Error("Nalog sa tim emailom već postoji.");
+    const phone = normalizePhone(data.registerPhone);
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) throw new Error("Nalog sa tim telefonom već postoji.");
     const passwordHash = await bcrypt.hash(data.registerPassword || "", 12);
+    const firstName = data.registerFirstName || "Korisnik";
+    const lastName = data.registerLastName || "";
     const user = await prisma.user.create({
       data: {
-        name: data.registerName || "Korisnik",
+        firstName,
+        lastName,
+        name: `${firstName} ${lastName}`.trim(),
         email: data.registerEmail || "",
-        phone: data.registerPhone || null,
+        phone,
         passwordHash,
         role: "CUSTOMER",
         status: "ACTIVE",

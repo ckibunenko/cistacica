@@ -1,11 +1,13 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "passwordHash" TEXT NOT NULL,
     "role" TEXT NOT NULL,
+    "firstName" TEXT NOT NULL DEFAULT '',
+    "lastName" TEXT NOT NULL DEFAULT '',
     "name" TEXT NOT NULL,
-    "phone" TEXT,
+    "phone" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
@@ -18,6 +20,15 @@ CREATE TABLE "CustomerProfile" (
     "defaultAddress" TEXT,
     "city" TEXT,
     "zone" TEXT,
+    "floor" TEXT,
+    "apartment" TEXT,
+    "intercom" TEXT,
+    "propertyType" TEXT,
+    "hasPets" BOOLEAN NOT NULL DEFAULT false,
+    "petNotes" TEXT,
+    "preferredTimeWindows" TEXT,
+    "preferredFrequency" TEXT NOT NULL DEFAULT 'ONE_TIME',
+    "accessNotes" TEXT,
     "notes" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
@@ -30,7 +41,16 @@ CREATE TABLE "CleanerProfile" (
     "userId" TEXT NOT NULL,
     "bio" TEXT,
     "city" TEXT NOT NULL DEFAULT 'Beograd',
+    "yearsExperience" INTEGER,
+    "offeredServices" TEXT,
+    "bringsSupplies" BOOLEAN NOT NULL DEFAULT false,
+    "bringsEquipment" BOOLEAN NOT NULL DEFAULT false,
+    "equipmentNote" TEXT,
+    "minHours" INTEGER NOT NULL DEFAULT 3,
     "verificationStatus" TEXT NOT NULL DEFAULT 'PENDING',
+    "identityVerified" BOOLEAN NOT NULL DEFAULT false,
+    "phoneVerified" BOOLEAN NOT NULL DEFAULT false,
+    "backgroundCheckStatus" TEXT NOT NULL DEFAULT 'PENDING',
     "ratingAverage" REAL NOT NULL DEFAULT 0,
     "ratingCount" INTEGER NOT NULL DEFAULT 0,
     "isActive" BOOLEAN NOT NULL DEFAULT false,
@@ -222,10 +242,16 @@ CREATE TABLE "Notification" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
+
+-- CreateIndex
 CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
 CREATE INDEX "User_status_idx" ON "User"("status");
+
+-- CreateIndex
+CREATE INDEX "User_phone_idx" ON "User"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CustomerProfile_userId_key" ON "CustomerProfile"("userId");

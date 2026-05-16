@@ -36,9 +36,12 @@ export const bookingWizardSchema = z
       .enum(["ONE_TIME", "WEEKLY", "EVERY_TWO_WEEKS", "MONTHLY"])
       .default("ONE_TIME"),
     accountMode: z.enum(["current", "login", "register"]).default("current"),
+    loginMethod: z.enum(["email", "phone"]).default("email"),
     loginEmail: z.string().email().optional().or(z.literal("")),
+    loginPhone: z.string().optional().or(z.literal("")),
     loginPassword: z.string().optional().or(z.literal("")),
-    registerName: z.string().optional().or(z.literal("")),
+    registerFirstName: z.string().optional().or(z.literal("")),
+    registerLastName: z.string().optional().or(z.literal("")),
     registerEmail: z.string().email().optional().or(z.literal("")),
     registerPhone: z.string().optional().or(z.literal("")),
     registerPassword: z.string().optional().or(z.literal(""))
@@ -63,16 +66,23 @@ export const bookingWizardSchema = z
       });
     }
 
-    if (data.accountMode === "login" && (!data.loginEmail || !data.loginPassword)) {
+    if (data.accountMode === "login" && (!data.loginPassword || (data.loginMethod === "email" && !data.loginEmail))) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["loginEmail"],
         message: "Unesite email i lozinku za prijavu."
       });
     }
+    if (data.accountMode === "login" && data.loginMethod === "phone" && !data.loginPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["loginPhone"],
+        message: "Unesite telefon i lozinku za prijavu."
+      });
+    }
 
     if (data.accountMode === "register") {
-      if (!data.registerName || !data.registerEmail || !data.registerPassword) {
+      if (!data.registerFirstName || !data.registerLastName || !data.registerEmail || !data.registerPhone || !data.registerPassword) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["registerEmail"],

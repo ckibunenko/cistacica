@@ -15,7 +15,7 @@ export default async function AdminCleanerDetailPage({ params }: { params: { id:
   const profile = await prisma.cleanerProfile.findUnique({
     where: { id: params.id },
     include: {
-      user: { select: { id: true, name: true, email: true, phone: true, status: true } },
+      user: { select: { id: true, firstName: true, lastName: true, name: true, email: true, phone: true, status: true } },
       zones: true,
       availability: true
     }
@@ -42,7 +42,7 @@ export default async function AdminCleanerDetailPage({ params }: { params: { id:
         <div>
           <h1 className="text-3xl font-black text-ink">{profile.user.name}</h1>
           <p className="mt-1 text-muted">
-            {profile.user.email} - {profile.user.phone ?? "bez telefona"}
+            {profile.user.email ?? "bez emaila"} - {profile.user.phone ?? "bez telefona"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -71,6 +71,28 @@ export default async function AdminCleanerDetailPage({ params }: { params: { id:
               <select className="field" name="isActive" defaultValue={String(profile.isActive)}>
                 <option value="true">Da</option>
                 <option value="false">Ne</option>
+              </select>
+            </label>
+            <label className="grid gap-1">
+              <span className="label">Identitet proveren</span>
+              <select className="field" name="identityVerified" defaultValue={String(profile.identityVerified)}>
+                <option value="true">Da</option>
+                <option value="false">Ne</option>
+              </select>
+            </label>
+            <label className="grid gap-1">
+              <span className="label">Telefon proveren</span>
+              <select className="field" name="phoneVerified" defaultValue={String(profile.phoneVerified)}>
+                <option value="true">Da</option>
+                <option value="false">Ne</option>
+              </select>
+            </label>
+            <label className="grid gap-1">
+              <span className="label">Background check</span>
+              <select className="field" name="backgroundCheckStatus" defaultValue={profile.backgroundCheckStatus}>
+                <option value="PENDING">Na čekanju</option>
+                <option value="PASSED">Prošao</option>
+                <option value="FAILED">Nije prošao</option>
               </select>
             </label>
             <div>
@@ -110,10 +132,24 @@ export default async function AdminCleanerDetailPage({ params }: { params: { id:
           <div className="panel p-5">
             <h2 className="text-xl font-black text-ink">Profil</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+              <Info label="Ime" value={profile.user.firstName || "nema"} />
+              <Info label="Prezime" value={profile.user.lastName || "nema"} />
+              <Info label="Email" value={profile.user.email ?? "nema"} />
+              <Info label="Telefon" value={profile.user.phone ?? "nema"} />
               <Info label="Ocena" value={`${profile.ratingAverage.toFixed(1)} (${profile.ratingCount})`} />
               <Info label="Grad" value={profile.city} />
               <Info label="Zone" value={profile.zones.map((zone) => zone.zone).join(", ") || "nema"} />
+              <Info label="Usluge" value={profile.offeredServices ?? "nema"} />
+              <Info label="Iskustvo" value={profile.yearsExperience === null ? "nema" : `${profile.yearsExperience} god.`} />
+              <Info label="Minimum sati" value={`${profile.minHours} h`} />
+              <Info label="Donosi sredstva" value={profile.bringsSupplies ? "Da" : "Ne"} />
+              <Info label="Donosi opremu" value={profile.bringsEquipment ? "Da" : "Ne"} />
+              <Info label="Oprema" value={profile.equipmentNote ?? "nema"} />
+              <Info label="Identitet" value={profile.identityVerified ? "Verifikovan" : "Nije verifikovan"} />
+              <Info label="Telefon verifikovan" value={profile.phoneVerified ? "Da" : "Ne"} />
+              <Info label="Background check" value={profile.backgroundCheckStatus} />
               <Info label="Isplata" value={profile.payoutMethodNote ?? "nema"} />
+              <Info label="Interni rizik" value={profile.internalRiskNote ?? "nema"} />
             </dl>
             {profile.bio ? <p className="mt-4 rounded-md bg-white p-3 text-sm text-muted">{profile.bio}</p> : null}
           </div>

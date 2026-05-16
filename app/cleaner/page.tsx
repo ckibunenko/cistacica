@@ -9,11 +9,21 @@ import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
 
+const SERVICE_OPTIONS = [
+  "Redovno čišćenje",
+  "Standardno čišćenje",
+  "Pranje prozora",
+  "Peglanje",
+  "Dubinsko čišćenje nameštaja",
+  "Čišćenje posle renoviranja"
+];
+
 export default async function CleanerDashboardPage() {
   const user = await requireRole("CLEANER");
   const profile = await prisma.cleanerProfile.findUnique({
     where: { userId: user.id },
     include: {
+      user: { select: { firstName: true, lastName: true, name: true, email: true, phone: true } },
       zones: true,
       availability: true
     }
@@ -29,6 +39,13 @@ export default async function CleanerDashboardPage() {
   const completedPayout = bookings
     .filter((booking) => booking.status === "COMPLETED")
     .reduce((sum, booking) => sum + booking.cleanerPayoutRsd, 0);
+  const [fallbackFirstName, ...fallbackLastNameParts] = (profile?.user.name ?? user.name).split(" ");
+  const firstName = profile?.user.firstName || fallbackFirstName || "";
+  const lastName = profile?.user.lastName || fallbackLastNameParts.join(" ") || "";
+  const selectedServices = (profile?.offeredServices ?? "")
+    .split(",")
+    .map((service) => service.trim())
+    .filter(Boolean);
 
   return (
     <main className="container-page py-8">
@@ -55,10 +72,49 @@ export default async function CleanerDashboardPage() {
 
           <form action={updateCleanerProfileAction} className="panel grid gap-4 p-5">
             <h2 className="text-lg font-black text-ink">Profil i zone</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1">
+                <span className="label">Ime</span>
+                <input className="field" name="firstName" defaultValue={firstName} required />
+              </label>
+              <label className="grid gap-1">
+                <span className="label">Prezime</span>
+                <input className="field" name="lastName" defaultValue={lastName} required />
+              </label>
+            </div>
+            <label className="grid gap-1">
+              <span className="label">Telefon</span>
+              <input className="field" name="phone" type="tel" defaultValue={profile?.user.phone ?? ""} required />
+            </label>
+            <label className="grid gap-1">
+              <span className="label">Email (opciono)</span>
+              <input className="field" name="email" type="email" defaultValue={profile?.user.email ?? ""} />
+            </label>
             <label className="grid gap-1">
               <span className="label">Bio</span>
               <textarea className="field min-h-24" name="bio" defaultValue={profile?.bio ?? ""} />
             </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1">
+                <span className="label">Godine iskustva</span>
+                <input className="field" name="yearsExperience" type="number" min={0} max={60} defaultValue={profile?.yearsExperience ?? 0} />
+              </label>
+              <label className="grid gap-1">
+                <span className="label">Minimum sati</span>
+                <input className="field" name="minHours" type="number" min={1} max={12} defaultValue={profile?.minHours ?? 3} />
+              </label>
+            </div>
+            <div>
+              <p className="label">Usluge</p>
+              <div className="mt-2 grid gap-2">
+                {SERVICE_OPTIONS.map((service) => (
+                  <label key={service} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="offeredServices" value={service} defaultChecked={selectedServices.includes(service)} />
+                    {service}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div>
               <p className="label">Zone</p>
               <div className="mt-2 grid gap-2">
@@ -85,6 +141,26 @@ export default async function CleanerDashboardPage() {
                 })}
               </div>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1">
+                <span className="label">Donosim sredstva</span>
+                <select className="field" name="bringsSupplies" defaultValue={String(profile?.bringsSupplies ?? false)}>
+                  <option value="false">Ne</option>
+                  <option value="true">Da</option>
+                </select>
+              </label>
+              <label className="grid gap-1">
+                <span className="label">Donosim opremu</span>
+                <select className="field" name="bringsEquipment" defaultValue={String(profile?.bringsEquipment ?? false)}>
+                  <option value="false">Ne</option>
+                  <option value="true">Da</option>
+                </select>
+              </label>
+            </div>
+            <label className="grid gap-1">
+              <span className="label">Napomena o opremi</span>
+              <input className="field" name="equipmentNote" defaultValue={profile?.equipmentNote ?? ""} />
+            </label>
             <label className="grid gap-1">
               <span className="label">Napomena za isplatu</span>
               <input className="field" name="payoutMethodNote" defaultValue={profile?.payoutMethodNote ?? ""} />
